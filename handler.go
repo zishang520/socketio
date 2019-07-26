@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
-
-	"github.com/pschlump/godebug"
-	"github.com/sirupsen/logrus"
+	// "github.com/pschlump/godebug"
+	// "github.com/sirupsen/logrus"
 )
 
 // PJS - could have it return more than just an error, if "rmsg" and "rbody" - then emit response?
@@ -71,16 +70,16 @@ func (h *baseHandler) OnAny(f interface{}) error {
 	return nil
 }
 
-func (h *baseHandler) PrintEventsRespondedTo() {
-	fmt.Printf("\tEvents:[")
-	com := ""
-	for i := range h.events {
-		fmt.Printf("%s%s", com, i)
-		com = ", "
-	}
-	fmt.Printf(" ] AllEvents = %d", len(h.allEvents))
-	fmt.Printf("\n")
-}
+// func (h *baseHandler) PrintEventsRespondedTo() {
+// 	fmt.Printf("\tEvents:[")
+// 	com := ""
+// 	for i := range h.events {
+// 		fmt.Printf("%s%s", com, i)
+// 		com = ", "
+// 	}
+// 	fmt.Printf(" ] AllEvents = %d", len(h.allEvents))
+// 	fmt.Printf("\n")
+// }
 
 type socketHandler struct {
 	*baseHandler
@@ -213,9 +212,9 @@ func (h *baseHandler) broadcastName(room string) string {
 }
 
 func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{}, error) {
-	if db1 {
-		fmt.Printf("At:%s\n", godebug.LF())
-	}
+	// if db1 {
+	// 	fmt.Printf("At:%s\n", godebug.LF())
+	// }
 	var message string
 	switch packet.Type {
 	case _CONNECT:
@@ -230,16 +229,16 @@ func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{
 	default:
 		message = decoder.Message()
 	}
-	if db1 {
-		fmt.Printf("At:%s\n", godebug.LF())
-	}
-	h.PrintEventsRespondedTo()
-	if DbLogMessage {
-		fmt.Printf("Message [%s] ", message)
-		if db1 {
-			fmt.Printf("%s\n", godebug.LF())
-		}
-	}
+	// if db1 {
+	// 	fmt.Printf("At:%s\n", godebug.LF())
+	// }
+	// h.PrintEventsRespondedTo()
+	// if DbLogMessage {
+	// 	fmt.Printf("Message [%s] ", message)
+	// 	if db1 {
+	// 		fmt.Printf("%s\n", godebug.LF())
+	// 	}
+	// }
 
 	/*
 		// xyzzy - allEvents
@@ -255,12 +254,12 @@ func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{
 	h.lock.RUnlock()
 
 	if !ok && !ok1 {
-		if db1 {
-			fmt.Printf("Did not have a handler for %s At:%s\n", message, godebug.LF())
-		}
+		// if db1 {
+		// 	fmt.Printf("Did not have a handler for %s At:%s\n", message, godebug.LF())
+		// }
 		// If the message is not recognized by the server, the decoder.currentCloser
 		// needs to be closed otherwise the server will be stuck until the e xyzzy
-		fmt.Printf("Error: %s was not found in h.events\n", message)
+		// fmt.Printf("Error: %s was not found in h.events\n", message)
 		decoder.Close()
 		return nil, nil
 	}
@@ -285,20 +284,20 @@ func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{
 	*/
 
 	args := c.GetArgs() // returns Array of interface{}
-	if db1 {
-		fmt.Printf("len(args) = %d At:%s\n", len(args), godebug.LF())
-	}
+	// if db1 {
+	// 	fmt.Printf("len(args) = %d At:%s\n", len(args), godebug.LF())
+	// }
 	olen := len(args)
-	if db1 {
-		fmt.Printf("args = %v, %s\n", args, godebug.LF())
-	}
+	// if db1 {
+	// 	fmt.Printf("args = %v, %s\n", args, godebug.LF())
+	// }
 	if olen > 0 {
 		packet.Data = &args
 		if err := decoder.DecodeData(packet); err != nil {
-			if db1 {
-				fmt.Printf("At:%s, err=%s, an error at this point means that your handler did not get called\n", godebug.LF(), err)
-			}
-			fmt.Printf("Try a `map[string]interface{}` for a parameter type, %s\n", godebug.LF())
+			// if db1 {
+			// 	fmt.Printf("At:%s, err=%s, an error at this point means that your handler did not get called\n", godebug.LF(), err)
+			// }
+			// fmt.Printf("Try a `map[string]interface{}` for a parameter type, %s\n", godebug.LF())
 			return nil, err
 		}
 	}
@@ -308,23 +307,23 @@ func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{
 		args = append(args, nil)
 	}
 
-	if DbLogMessage {
-		if db1 {
-			fmt.Printf("\tArgs = %s, %s\n", godebug.SVar(args), godebug.LF())
-		} else {
-			fmt.Printf("Args = %s\n", godebug.SVar(args))
-		}
-	}
-	if LogMessage {
-		logrus.Infof("Message [%s] Auruments %s", message, godebug.SVar(args))
-	}
+	// if DbLogMessage {
+	// if db1 {
+	// 	fmt.Printf("\tArgs = %s, %s\n", godebug.SVar(args), godebug.LF())
+	// } else {
+	// 	fmt.Printf("Args = %s\n", godebug.SVar(args))
+	// }
+	// }
+	// if LogMessage {
+	// logrus.Infof("Message [%s] Auruments %s", message, godebug.SVar(args))
+	// }
 
 	// ------------------------------------------------------ call ---------------------------------------------------------------------------------------
 	retV := c.Call(h.socket, args)
 	if len(retV) == 0 {
-		if db1 {
-			fmt.Printf("At:%s\n", godebug.LF())
-		}
+		// if db1 {
+		// fmt.Printf("At:%s\n", godebug.LF())
+		// }
 		return nil, nil
 	}
 
@@ -337,23 +336,23 @@ func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{
 	for i, v := range retV {
 		ret[i] = v.Interface()
 	}
-	if db1 {
-		fmt.Printf("At:%s\n", godebug.LF())
-	}
-	if DbLogMessage {
-		if err != nil {
-			fmt.Printf("Response/Error %s", err)
-		} else {
-			fmt.Printf("Response %s", godebug.SVar(ret))
-		}
-	}
-	if LogMessage {
-		if err != nil {
-			logrus.Infof("Response/Error %s", err)
-		} else {
-			logrus.Infof("Response %s", godebug.SVar(ret))
-		}
-	}
+	// if db1 {
+	// fmt.Printf("At:%s\n", godebug.LF())
+	// }
+	// if DbLogMessage {
+	// if err != nil {
+	// fmt.Printf("Response/Error %s", err)
+	// } else {
+	// fmt.Printf("Response %s", godebug.SVar(ret))
+	// }
+	// }
+	// if LogMessage {
+	// if err != nil {
+	// logrus.Infof("Response/Error %s", err)
+	// } else {
+	// logrus.Infof("Response %s", godebug.SVar(ret))
+	// }
+	// }
 	return ret, err
 }
 
@@ -375,9 +374,9 @@ func (h *socketHandler) onAck(id int, decoder *decoder, packet *packet) error {
 	return nil
 }
 
-const db1 = true
+// const db1 = true
 
-var DbLogMessage = true
-var LogMessage = true
+// var DbLogMessage = true
+// var LogMessage = true
 
 /* vim: set noai ts=4 sw=4: */
