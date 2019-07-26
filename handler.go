@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/sirupsen/logrus"
 	"github.com/pschlump/godebug"
+	"github.com/sirupsen/logrus"
 )
 
 // PJS - could have it return more than just an error, if "rmsg" and "rbody" - then emit response?
@@ -150,6 +150,22 @@ func (h *socketHandler) Rooms() []string {
 		i++
 	}
 	return ret
+}
+
+func (h *baseHandler) Clients(room string) map[string]Socket {
+	return h.broadcast.Clients(h.broadcastName(room))
+}
+
+func (h *socketHandler) Clients(room string) map[string]Socket {
+	return h.baseHandler.broadcast.Clients(h.broadcastName(room))
+}
+
+func (h *baseHandler) HasRoom(room string) bool {
+	return h.broadcast.Has(h.broadcastName(room), nil)
+}
+
+func (h *socketHandler) HasRoom(room string) bool {
+	return h.baseHandler.broadcast.Has(h.broadcastName(room), h.socket)
 }
 
 func (h *socketHandler) Join(room string) error {

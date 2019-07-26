@@ -14,7 +14,9 @@ type Socket interface {
 	On(message string, f interface{}) error                      // On registers the function f to handle message.
 	OnAny(f interface{}) error                                   // Register a function that will get called on any message
 	Emit(message string, args ...interface{}) error              // Emit emits the message with given args.
+	Clients(room string) map[string]Socket                       // Get all the links in the specified room
 	Join(room string) error                                      // Join joins the room.
+	HasRoom(room string) bool                                    // Whether room exists
 	Leave(room string) error                                     // Leave leaves the room.
 	BroadcastTo(room, message string, args ...interface{}) error // BroadcastTo broadcasts the message to the room with given args.
 }

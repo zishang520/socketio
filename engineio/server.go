@@ -17,7 +17,7 @@ type config struct {
 	PingTimeout   time.Duration
 	PingInterval  time.Duration
 	MaxConnection int
-	AllowRequest  func(*http.Request) error
+	AllowRequest  func(http.ResponseWriter, *http.Request) error
 	AllowUpgrades bool
 	Cookie        string
 	NewId         func(r *http.Request) string
@@ -53,7 +53,7 @@ func NewServer(transports []string) (*Server, error) {
 			PingTimeout:   60000 * time.Millisecond,
 			PingInterval:  25000 * time.Millisecond,
 			MaxConnection: 1000,
-			AllowRequest:  func(*http.Request) error { return nil },
+			AllowRequest:  func(http.ResponseWriter, *http.Request) error { return nil },
 			AllowUpgrades: true,
 			Cookie:        "io",
 			NewId:         newId,
@@ -80,7 +80,7 @@ func (s *Server) SetMaxConnection(n int) {
 }
 
 // SetAllowRequest sets the middleware function when establish connection. If it return non-nil, connection won't be established. Default will allow all request.
-func (s *Server) SetAllowRequest(f func(*http.Request) error) {
+func (s *Server) SetAllowRequest(f func(http.ResponseWriter, *http.Request) error) {
 	s.config.AllowRequest = f
 }
 
@@ -108,16 +108,16 @@ func (s *Server) SetSessionManager(sessions Sessions) {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	if err := s.config.AllowRequest(w, r); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	sid := r.URL.Query().Get("sid")
 	conn := s.serverSessions.Get(sid)
 	if conn == nil {
 		if sid != "" {
 			http.Error(w, "invalid sid", http.StatusBadRequest)
-			return
-		}
-
-		if err := s.config.AllowRequest(r); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 

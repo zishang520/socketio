@@ -44,7 +44,7 @@ func (s *Server) SetMaxConnection(n int) {
 }
 
 // SetAllowRequest sets the middleware function when establish connection. If it return non-nil, connection won't be established. Default will allow all request.
-func (s *Server) SetAllowRequest(f func(*http.Request) error) {
+func (s *Server) SetAllowRequest(f func(http.ResponseWriter, *http.Request) error) {
 	s.eio.SetAllowRequest(f)
 }
 
