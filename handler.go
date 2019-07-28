@@ -147,6 +147,14 @@ func (h *baseHandler) Rooms() []string {
 	return h.broadcast.Rooms(nil)
 }
 
+func (h *socketHandler) GetRoomSet() map[string]map[string]Socket {
+	return h.baseHandler.broadcast.GetRoomSet()
+}
+
+func (h *baseHandler) GetRoomSet() map[string]map[string]Socket {
+	return h.broadcast.GetRoomSet()
+}
+
 func (h *baseHandler) Clients(room string) map[string]Socket {
 	return h.broadcast.Clients(h.broadcastName(room))
 }

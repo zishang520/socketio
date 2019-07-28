@@ -43,6 +43,11 @@ func (s *Server) SetMaxConnection(n int) {
 	s.eio.SetMaxConnection(n)
 }
 
+// SetMaxConnection sets the max connetion. Default is 1000.
+func (s *Server) GetConnectionLen() int32 {
+	return s.eio.GetConnectionLen()
+}
+
 // SetAllowRequest sets the middleware function when establish connection. If it return non-nil, connection won't be established. Default will allow all request.
 func (s *Server) SetAllowRequest(f func(http.ResponseWriter, *http.Request) error) {
 	s.eio.SetAllowRequest(f)
@@ -90,6 +95,11 @@ func (s *Server) GetSocket(Id string) Socket {
 // Server level broadcasts function.
 func (s *Server) BroadcastTo(room, message string, args ...interface{}) {
 	s.namespace.BroadcastTo(room, message, args...)
+}
+
+// Rooms
+func (s *Server) GetRoomSet() map[string]map[string]Socket {
+	return s.namespace.GetRoomSet()
 }
 
 func (s *Server) loop() {

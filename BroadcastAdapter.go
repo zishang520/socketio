@@ -7,6 +7,9 @@ type BroadcastAdaptor interface {
 	// WGet the joined rooms
 	Rooms(socket Socket) []string
 
+	// GetRoomSet
+	GetRoomSet() map[string]map[string]Socket
+
 	// Whether room exists
 	Has(room string, socket Socket) bool
 
@@ -133,29 +136,32 @@ func (b *broadcast) Send(ignore Socket, room, message string, args ...interface{
 	return nil
 }
 
-// return the number of connections in a specified room
-func (b *broadcast) NumberInRoom(room string) (rv int, err error) {
+// return map[string]map[string]Socket
+func (b *broadcast) GetRoomSet() map[string]map[string]Socket {
 	b.broadcastLock.RLock()
 	defer b.broadcastLock.RUnlock()
 
-	sockets := b.roomSet[room]
-	rv = 0
-	for _, _ = range sockets {
-		rv++
+	return b.roomSet
+}
+
+// return the number of connections in a specified room
+func (b *broadcast) NumberInRoom(room string) int {
+	b.broadcastLock.RLock()
+	defer b.broadcastLock.RUnlock()
+
+	sockets, ok := b.roomSet[room]
+	if !ok {
+		return 0
 	}
-	return
+	return len(sockets)
 }
 
 // return the number of rooms
-func (b *broadcast) NumberOfRooms(room string) (rv int, err error) {
+func (b *broadcast) NumberOfRooms(room string) int {
 	b.broadcastLock.RLock()
 	defer b.broadcastLock.RUnlock()
 
-	rv = 0
-	for _, _ = range b.roomSet {
-		rv++
-	}
-	return
+	return len(b.roomSet)
 }
 
 // return the names of the rooms as a slice of strings
