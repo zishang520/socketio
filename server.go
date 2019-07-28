@@ -78,6 +78,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.eio.ServeHTTP(w, r)
 }
 
+// GetSocket
+func (s *Server) GetSocket(Id string) Socket {
+	conn := s.eio.GetSessionManager().Get(Id)
+	if conn == nil {
+		return nil
+	}
+	return newSocket(conn, s.baseHandler)
+}
+
 // Server level broadcasts function.
 func (s *Server) BroadcastTo(room, message string, args ...interface{}) {
 	s.namespace.BroadcastTo(room, message, args...)

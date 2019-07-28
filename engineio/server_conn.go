@@ -80,7 +80,7 @@ type serverConn struct {
 	pingChan        chan bool
 }
 
-var InvalidError = errors.New("invalid transport")
+var InvalidError = errors.New(`{"code":0,"message":"Transport unknown"}`)
 
 func newServerConn(id string, w http.ResponseWriter, r *http.Request, callback serverCallback) (*serverConn, error) {
 	transportName := r.URL.Query().Get("transport")
@@ -94,7 +94,7 @@ func newServerConn(id string, w http.ResponseWriter, r *http.Request, callback s
 		callback:     callback,
 		state:        stateNormal,
 		readerChan:   make(chan *connReader),
-		pingTimeout:  callback.configure().PingTimeout,
+		pingTimeout:  callback.configure().PingTimeout + callback.configure().PingInterval,
 		pingInterval: callback.configure().PingInterval,
 		pingChan:     make(chan bool),
 	}

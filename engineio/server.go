@@ -50,9 +50,9 @@ func NewServer(transports []string) (*Server, error) {
 	}
 	return &Server{
 		config: config{
-			PingTimeout:   60000 * time.Millisecond,
+			PingTimeout:   5000 * time.Millisecond,
 			PingInterval:  25000 * time.Millisecond,
-			MaxConnection: 1000,
+			MaxConnection: 0,
 			AllowRequest:  func(http.ResponseWriter, *http.Request) error { return nil },
 			AllowUpgrades: true,
 			Cookie:        "io",
@@ -104,6 +104,16 @@ func (s *Server) SetSessionManager(sessions Sessions) {
 	s.serverSessions = sessions
 }
 
+// GetSessionManager
+func (s *Server) GetSessionManager() Sessions {
+	return s.serverSessions
+}
+
+// GetConnectionLen
+func (s *Server) GetConnectionLen() int32 {
+	return s.currentConnection
+}
+
 // ServeHTTP handles http request.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
@@ -117,13 +127,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn := s.serverSessions.Get(sid)
 	if conn == nil {
 		if sid != "" {
-			http.Error(w, "invalid sid", http.StatusBadRequest)
+			http.Error(w, `{"code":1,"message":"Session ID unknown"}`, http.StatusBadRequest)
 			return
 		}
 
 		n := atomic.AddInt32(&s.currentConnection, 1)
-		if int(n) > s.config.MaxConnection {
-			http.Error(w, "too many connections", http.StatusServiceUnavailable)
+		if s.config.MaxConnection != 0 && int(n) > s.config.MaxConnection {
+			http.Error(w, `{"code":5,"message":"too many connections"}`, http.StatusServiceUnavailable)
 			return
 		}
 
@@ -141,6 +151,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.socketChan <- conn
 	}
 	http.SetCookie(w, &http.Cookie{
+		Path:  "/",
 		Name:  s.config.Cookie,
 		Value: sid,
 	})

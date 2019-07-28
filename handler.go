@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
-	// "github.com/pschlump/godebug"
 	// "github.com/sirupsen/logrus"
+	// "github.com/pschlump/godebug"
 )
 
 // PJS - could have it return more than just an error, if "rmsg" and "rbody" - then emit response?
@@ -140,15 +140,11 @@ func (h *socketHandler) Emit(message string, args ...interface{}) error {
 }
 
 func (h *socketHandler) Rooms() []string {
-	h.lock.RLock()
-	defer h.lock.RUnlock()
-	ret := make([]string, len(h.rooms))
-	i := 0
-	for room := range h.rooms {
-		ret[i] = room
-		i++
-	}
-	return ret
+	return h.baseHandler.broadcast.Rooms(h.socket)
+}
+
+func (h *baseHandler) Rooms() []string {
+	return h.broadcast.Rooms(nil)
 }
 
 func (h *baseHandler) Clients(room string) map[string]Socket {
@@ -255,7 +251,7 @@ func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{
 
 	if !ok && !ok1 {
 		// if db1 {
-		// 	fmt.Printf("Did not have a handler for %s At:%s\n", message, godebug.LF())
+		// fmt.Printf("Did not have a handler for %s At:%s\n", message, godebug.LF())
 		// }
 		// If the message is not recognized by the server, the decoder.currentCloser
 		// needs to be closed otherwise the server will be stuck until the e xyzzy
@@ -285,17 +281,17 @@ func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{
 
 	args := c.GetArgs() // returns Array of interface{}
 	// if db1 {
-	// 	fmt.Printf("len(args) = %d At:%s\n", len(args), godebug.LF())
+	// fmt.Printf("len(args) = %d At:%s\n", len(args), godebug.LF())
 	// }
 	olen := len(args)
 	// if db1 {
-	// 	fmt.Printf("args = %v, %s\n", args, godebug.LF())
+	// fmt.Printf("args = %v, %s\n", args, godebug.LF())
 	// }
 	if olen > 0 {
 		packet.Data = &args
 		if err := decoder.DecodeData(packet); err != nil {
 			// if db1 {
-			// 	fmt.Printf("At:%s, err=%s, an error at this point means that your handler did not get called\n", godebug.LF(), err)
+			// fmt.Printf("At:%s, err=%s, an error at this point means that your handler did not get called\n", godebug.LF(), err)
 			// }
 			// fmt.Printf("Try a `map[string]interface{}` for a parameter type, %s\n", godebug.LF())
 			return nil, err
@@ -322,7 +318,7 @@ func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{
 	retV := c.Call(h.socket, args)
 	if len(retV) == 0 {
 		// if db1 {
-		// fmt.Printf("At:%s\n", godebug.LF())
+		// 	fmt.Printf("At:%s\n", godebug.LF())
 		// }
 		return nil, nil
 	}
@@ -337,21 +333,21 @@ func (h *socketHandler) onPacket(decoder *decoder, packet *packet) ([]interface{
 		ret[i] = v.Interface()
 	}
 	// if db1 {
-	// fmt.Printf("At:%s\n", godebug.LF())
+	// 	fmt.Printf("At:%s\n", godebug.LF())
 	// }
 	// if DbLogMessage {
-	// if err != nil {
-	// fmt.Printf("Response/Error %s", err)
-	// } else {
-	// fmt.Printf("Response %s", godebug.SVar(ret))
-	// }
+	// 	if err != nil {
+	// 		fmt.Printf("Response/Error %s", err)
+	// 	} else {
+	// 		fmt.Printf("Response %s", godebug.SVar(ret))
+	// 	}
 	// }
 	// if LogMessage {
-	// if err != nil {
-	// logrus.Infof("Response/Error %s", err)
-	// } else {
-	// logrus.Infof("Response %s", godebug.SVar(ret))
-	// }
+	// 	if err != nil {
+	// 		logrus.Infof("Response/Error %s", err)
+	// 	} else {
+	// 		logrus.Infof("Response %s", godebug.SVar(ret))
+	// 	}
 	// }
 	return ret, err
 }

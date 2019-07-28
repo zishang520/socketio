@@ -4,6 +4,9 @@ import "sync"
 
 // BroadcastAdaptor is the adaptor to handle broadcast.
 type BroadcastAdaptor interface {
+	// WGet the joined rooms
+	Rooms(socket Socket) []string
+
 	// Whether room exists
 	Has(room string, socket Socket) bool
 
@@ -32,6 +35,24 @@ func newBroadcastDefault() BroadcastAdaptor {
 	return &broadcast{
 		roomSet: make(map[string]map[string]Socket),
 	}
+}
+
+// Get the joined rooms
+func (b *broadcast) Rooms(socket Socket) []string {
+	b.broadcastLock.RLock()
+	defer b.broadcastLock.RUnlock()
+
+	ret := []string{}
+	for room, sockets := range b.roomSet {
+		if socket == nil {
+			ret = append(ret, room)
+		} else {
+			if _, has := sockets[socket.Id()]; has {
+				ret = append(ret, room)
+			}
+		}
+	}
+	return ret
 }
 
 // Whether room exists
