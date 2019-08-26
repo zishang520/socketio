@@ -140,11 +140,19 @@ func (h *socketHandler) Emit(message string, args ...interface{}) error {
 }
 
 func (h *socketHandler) Rooms() []string {
-	return h.baseHandler.broadcast.Rooms(h.socket)
+	h.lock.RLock()
+	tmp := h.rooms
+	h.lock.RUnlock()
+
+	ret := []string{}
+	for room := range tmp {
+		ret = append(ret, room)
+	}
+	return ret
 }
 
 func (h *baseHandler) Rooms() []string {
-	return h.broadcast.Rooms(nil)
+	return h.broadcast.Rooms()
 }
 
 func (h *socketHandler) GetRoomSet() map[string]map[string]Socket {
