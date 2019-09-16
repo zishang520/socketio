@@ -9,11 +9,13 @@ import (
 	"github.com/pschlump/socketio/engineio/transport"
 
 	"github.com/gorilla/websocket"
+	"sync"
 )
 
 type Server struct {
-	callback transport.Callback
-	conn     *websocket.Conn
+	callback     transport.Callback
+	conn         *websocket.Conn
+	writerLocker sync.Mutex
 }
 
 /*
@@ -57,11 +59,13 @@ func (s *Server) NextWriter(msgType message.MessageType, packetType parser.Packe
 	if msgType == message.MessageBinary {
 		wsType, newEncoder = websocket.BinaryMessage, parser.NewBinaryEncoder
 	}
-
 	w, err := s.conn.NextWriter(wsType)
 	if err != nil {
 		return nil, err
 	}
+	s.writerLocker.Lock()
+	defer s.writerLocker.Unlock()
+
 	ret, err := newEncoder(w, packetType)
 	if err != nil {
 		return nil, err
