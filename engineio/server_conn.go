@@ -66,7 +66,7 @@ type serverConn struct {
 	id              string
 	request         *http.Request
 	callback        serverCallback
-	writerLocker    sync.Mutex
+	writerLocker    sync.RWMutex
 	transportLocker sync.RWMutex
 	currentName     string
 	current         transport.Server
@@ -147,7 +147,9 @@ func (c *serverConn) NextWriter(t MessageType) (io.WriteCloser, error) {
 	default:
 		return nil, io.EOF
 	}
+	c.writerLocker.Lock()
 	ret, err := c.getCurrent().NextWriter(message.MessageType(t), parser.MESSAGE)
+	c.writerLocker.Unlock()
 	return ret, err
 }
 
@@ -204,14 +206,22 @@ func (c *serverConn) OnPacket(r *parser.PacketDecoder) {
 		u := c.getUpgrade()
 		newWriter := t.NextWriter
 		if u != nil {
+			c.writerLocker.Lock()
 			if w, _ := t.NextWriter(message.MessageText, parser.NOOP); w != nil {
-				w.Close()
+				writer := newConnWriter(w, &c.writerLocker)
+				writer.Close()
+			} else {
+				c.writerLocker.Unlock()
 			}
 			newWriter = u.NextWriter
 		}
+		c.writerLocker.Lock()
 		if w, _ := newWriter(message.MessageText, parser.PONG); w != nil {
 			io.Copy(w, r)
-			w.Close()
+			writer := newConnWriter(w, &c.writerLocker)
+			writer.Close()
+		} else {
+			c.writerLocker.Unlock()
 		}
 		fallthrough
 	case parser.PONG:
@@ -269,7 +279,9 @@ func (s *serverConn) onOpen() error {
 		PingInterval: s.callback.configure().PingInterval / time.Millisecond,
 		PingTimeout:  s.callback.configure().PingTimeout / time.Millisecond,
 	}
+	s.writerLocker.Lock()
 	w, err := s.getCurrent().NextWriter(message.MessageText, parser.OPEN)
+	s.writerLocker.Unlock()
 	if err != nil {
 		return err
 	}
