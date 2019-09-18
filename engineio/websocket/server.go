@@ -15,7 +15,7 @@ import (
 type Server struct {
 	callback     transport.Callback
 	conn         *websocket.Conn
-	writerLocker sync.Mutex
+	writerLocker sync.RWMutex
 }
 
 /*
@@ -55,6 +55,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) NextWriter(msgType message.MessageType, packetType parser.PacketType) (io.WriteCloser, error) {
+	s.writerLocker.Lock()
+	defer s.writerLocker.Unlock()
+
 	wsType, newEncoder := websocket.TextMessage, parser.NewStringEncoder
 	if msgType == message.MessageBinary {
 		wsType, newEncoder = websocket.BinaryMessage, parser.NewBinaryEncoder
@@ -63,8 +66,6 @@ func (s *Server) NextWriter(msgType message.MessageType, packetType parser.Packe
 	if err != nil {
 		return nil, err
 	}
-	s.writerLocker.Lock()
-	defer s.writerLocker.Unlock()
 
 	ret, err := newEncoder(w, packetType)
 	if err != nil {
