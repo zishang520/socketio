@@ -154,7 +154,7 @@ func (c *serverConn) NextWriter(t MessageType) (io.WriteCloser, error) {
 }
 
 func (c *serverConn) Close() error {
-	if c.getState() != stateNormal && c.getState() != stateUpgrading {
+	if s := c.getState(); s != stateNormal && s != stateUpgrading {
 		return nil
 	}
 	if c.upgrading != nil {
@@ -225,8 +225,15 @@ func (c *serverConn) OnPacket(r *parser.PacketDecoder) {
 		}
 		fallthrough
 	case parser.PONG:
+		if s := c.getState(); s != stateNormal && s != stateUpgrading {
+			return
+		}
 		c.pingChan <- true
 	case parser.MESSAGE:
+		if s := c.getState(); s != stateNormal && s != stateUpgrading {
+			r.Close()
+			return
+		}
 		closeChan := make(chan struct{})
 		c.readerChan <- newConnReader(r, closeChan)
 		<-closeChan
