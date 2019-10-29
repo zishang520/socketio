@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pschlump/json" //	"encoding/json"
+	"encoding/json"
 	"github.com/pschlump/socketio/engineio/message"
 	"github.com/pschlump/socketio/engineio/parser"
 	"github.com/pschlump/socketio/engineio/transport"

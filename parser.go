@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
-	"github.com/pschlump/json" //	"encoding/json"
+	"encoding/json"
 	"github.com/pschlump/socketio/engineio"
 )
 

@@ -6,7 +6,7 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/pschlump/json" //	"encoding/json"
+	"encoding/json"
 )
 
 // Attachment is an attachment handler used in emit args. All attachments will send as binary in transport layer. When use attachment, make sure use as pointer.
