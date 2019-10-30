@@ -225,15 +225,8 @@ func (c *serverConn) OnPacket(r *parser.PacketDecoder) {
 		}
 		fallthrough
 	case parser.PONG:
-		if s := c.getState(); s != stateNormal && s != stateUpgrading {
-			return
-		}
 		c.pingChan <- true
 	case parser.MESSAGE:
-		if s := c.getState(); s != stateNormal && s != stateUpgrading {
-			r.Close()
-			return
-		}
 		closeChan := make(chan struct{})
 		c.readerChan <- newConnReader(r, closeChan)
 		<-closeChan

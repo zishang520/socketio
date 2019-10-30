@@ -64,8 +64,8 @@ func (p *Polling) Close() error {
 	p.setState(stateClosing)
 	if p.getLocker.TryLock() {
 		if p.postLocker.TryLock() {
-			p.callback.OnClose(p)
 			p.setState(stateClosed)
+			p.callback.OnClose(p)
 			p.postLocker.Unlock()
 		}
 		p.getLocker.Unlock()
