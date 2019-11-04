@@ -194,6 +194,9 @@ func (c *serverConn) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *serverConn) OnPacket(r *parser.PacketDecoder) {
+	c.writerLocker.Lock()
+	defer c.writerLocker.Unlock()
+
 	if s := c.getState(); s != stateNormal && s != stateUpgrading {
 		return
 	}
@@ -206,22 +209,14 @@ func (c *serverConn) OnPacket(r *parser.PacketDecoder) {
 		u := c.getUpgrade()
 		newWriter := t.NextWriter
 		if u != nil {
-			c.writerLocker.Lock()
 			if w, _ := t.NextWriter(message.MessageText, parser.NOOP); w != nil {
-				writer := newConnWriter(w, &c.writerLocker)
-				writer.Close()
-			} else {
-				c.writerLocker.Unlock()
+				w.Close()
 			}
 			newWriter = u.NextWriter
 		}
-		c.writerLocker.Lock()
 		if w, _ := newWriter(message.MessageText, parser.PONG); w != nil {
 			io.Copy(w, r)
-			writer := newConnWriter(w, &c.writerLocker)
-			writer.Close()
-		} else {
-			c.writerLocker.Unlock()
+			w.Close()
 		}
 		fallthrough
 	case parser.PONG:
